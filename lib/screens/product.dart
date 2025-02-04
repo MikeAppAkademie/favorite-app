@@ -1,61 +1,45 @@
-// Statische Implementierung ohne Provider
-import 'package:favorites_app/models/product.dart';
+import 'package:favorites_app/provider/favorites.dart';
 import 'package:favorites_app/screens/favorites.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class ProductsScreen extends StatefulWidget {
+class ProductsScreen extends StatelessWidget {
   const ProductsScreen({super.key});
 
   @override
-  State<ProductsScreen> createState() => _ProductsScreenState();
-}
-
-class _ProductsScreenState extends State<ProductsScreen> {
-  final List<Product> _products = [
-    Product(id: '1', name: 'Banane'),
-    Product(id: '2', name: 'Apfel'),
-    Product(id: '3', name: 'Erdbeere'),
-    Product(id: '4', name: 'Birne'),
-  ];
-
-  void _toggleFavorite(String id) {
-    setState(() {
-      final product = _products.firstWhere((product) => product.id == id);
-      product.isFavorite = !product.isFavorite;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Products'),
         actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.favorite,
-              size: 30,
-              color: Colors.black54,
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FavoritesScreen(
-                    favoriteProducts: _products
-                        .where((product) => product.isFavorite)
-                        .toList(),
+          Badge.count(
+            count: context.watch<FavoritesProvider>().favoriteProducts.length,
+            child: IconButton(
+              icon: const Icon(
+                Icons.favorite,
+                size: 30,
+                color: Colors.black54,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FavoritesScreen(
+                      favoriteProducts: favoritesProvider.favoriteProducts,
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ],
       ),
       body: ListView.builder(
-        itemCount: _products.length,
+        itemCount: favoritesProvider.products.length,
         itemBuilder: (context, index) {
-          final product = _products[index];
+          final product = favoritesProvider.products[index];
           return Card(
             elevation: 2,
             margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -70,7 +54,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   product.isFavorite ? Icons.favorite : Icons.favorite_border,
                   color: product.isFavorite ? Colors.red : null,
                 ),
-                onPressed: () => _toggleFavorite(product.id),
+                onPressed: () =>
+                    favoritesProvider.toggleFavorite(id: product.id),
               ),
             ),
           );
